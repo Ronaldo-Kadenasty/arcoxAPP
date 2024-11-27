@@ -1,0 +1,37 @@
+{
+  "name": "authContext",
+ 
+  "extra": {
+    "eas": {
+      "projectId": "a119d10a-7b5c-4776-a98f-36c6590d27c7"
+    }
+  },
+  "expo": {
+    
+    "android": {
+      "package": "com.kdnsty.authcontext",
+      "permissions": ["CAMERA"]
+    },
+    "extra": {
+      "eas": {
+        "projectId": "496cf1c1-9ed4-4e29-ab68-59a2c20c3f1d"
+      }
+    },
+    "plugins": [
+      [
+        "expo-barcode-scanner",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access camera."
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos.",
+          "savePhotosPermission": "Allow $(PRODUCT_NAME) to save photos.",
+          "isAccessMediaLocationEnabled": true
+        }
+      ]
+    ]
+  }
+}
