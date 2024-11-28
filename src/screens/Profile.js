@@ -29,32 +29,29 @@ const CartScreen = () => {
   const textRef = useRef();
   const [capturedImage, setCapturedImage] = useState(null);
   const [maxDiscount, setMaxDiscount] = useState('');
-  const [lastTicket,setLastTIcket]=useState();
+  const [lastTicket, setLastTIcket] = useState();
   const { soldProducts, addSoldProduct, removeSoldProduct } = useContext(ProductsContext);
 
-  
-  const setContext = async() =>{
-   let local = await AsyncStorage.getItem('maxDiscount')
+  const setContext = async () => {
+    let local = await AsyncStorage.getItem('maxDiscount')
     console.log(local)
-    setMaxDiscount( local);
+    setMaxDiscount(local);
   }
- 
+
   const handleDiscountInputSubmit = () => {
     Keyboard.dismiss();
   };
 
- 
-
   const handleDiscountChange = (discount) => {
     const parsedDiscount = parseFloat(discount);
-  
+
     if (!isNaN(parsedDiscount) && parsedDiscount >= 0 && parsedDiscount >= selectedItem.price - parseFloat(maxDiscount)) {
       setDiscount(parsedDiscount);
-  
+
       const newPrice = parsedDiscount;
       const updatedItem = { ...selectedItem, newPrice };
       setSelectedItem(updatedItem);
-  
+
       updateCartItemDiscount(selectedItem, selectedItem.price - newPrice);
     } else {
       setDiscount(0);
@@ -68,23 +65,23 @@ const CartScreen = () => {
     setSelectedItem(item);
     setNegociate(true);
   };
- const loadClients = () => {
-  db.transaction((tx) => {
-    tx.executeSql(
-      'SELECT * FROM clients',
-      [],
-      (_, { rows: { _array } }) => setClients(_array),
-      (_, error) => {
-        console.error('Error loading clients', error);
-        Alert.alert('Error', 'No se pudieron cargar los clientes.');
-      }
-    );
-  });
-};
+  const loadClients = () => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        'SELECT * FROM clients',
+        [],
+        (_, { rows: { _array } }) => setClients(_array),
+        (_, error) => {
+          console.error('Error loading clients', error);
+          Alert.alert('Error', 'No se pudieron cargar los clientes.');
+        }
+      );
+    });
+  };
   useEffect(() => {
     loadClients();
     setContext();
-    console.log('MAXDIscount',maxDiscount);
+    console.log('MAXDIscount', maxDiscount);
   }, []);
 
   const handleClearCart = () => {
@@ -126,22 +123,22 @@ const CartScreen = () => {
   };
 
   const handlePrintVenta = () => {
-  const seller = state.name;
-  const route = `Ruta ${state.udvId}`;
-  let total= +calculateTotal();
-  const cashReceived = +cashValue;
-  const change = +(cashValue - calculateTotal());
+    const seller = state.name;
+    const route = `Ruta ${state.udvId}`;
+    let total = +calculateTotal();
+    const cashReceived = +cashValue;
+    const change = +(cashValue - calculateTotal());
 
-  const ticketUrl = TicketService.generateVentaTicket(seller, route, cartItems, total,cashReceived, change);
-  setLastTIcket(ticketUrl);
-  Linking.openURL(ticketUrl)
-    .catch(err => console.error("Failed to open URL:", err));
-};
-const handleRePrintVenta = () => {
-  
-  Linking.openURL(lastTicket)
-    .catch(err => console.error("Failed to open URL:", err));
-};
+    const ticketUrl = TicketService.generateVentaTicket(seller, route, cartItems, total, cashReceived, change);
+    setLastTIcket(ticketUrl);
+    Linking.openURL(ticketUrl)
+      .catch(err => console.error("Failed to open URL:", err));
+  };
+  const handleRePrintVenta = () => {
+
+    Linking.openURL(lastTicket)
+      .catch(err => console.error("Failed to open URL:", err));
+  };
   const handleSell = async () => {
     try {
       setShowPrinting(true);
@@ -172,8 +169,8 @@ const handleRePrintVenta = () => {
     });
     return total.toFixed(2);
   };
-  
- 
+
+
   const renderItem = ({ item }) => (
     <View style={styles.cartItem} key={item.id}>
       <View style={styles.itemDetails}>
@@ -245,7 +242,7 @@ const handleRePrintVenta = () => {
       </View>
       {cartItems.length > 0 ? (
         <>
-          <View style={{ height: 509}}>
+          <View style={{ height: 509 }}>
 
             <FlatList
               data={cartItems}
@@ -257,7 +254,7 @@ const handleRePrintVenta = () => {
           <TouchableOpacity style={styles.clearCartButton} onPress={handleClearCart}>
             <Text style={styles.clearCartButtonText}>Limpiar Carrito</Text>
           </TouchableOpacity>
-         
+
         </>
       ) : (
         <View>
@@ -331,7 +328,7 @@ const handleRePrintVenta = () => {
       >
         <View style={styles.modalContainer}>
           <Text style={styles.modalTitle}>Imprimiendo...</Text>
-          
+
         </View>
 
       </Modal>

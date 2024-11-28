@@ -72,8 +72,9 @@ const CategoriesScreen = () => {
       const state = await NetInfo.fetch();
       if (state.isConnected) {
         fetchCategories();
-      } else {+
-        Alert.alert('Sin conexión', 'No se pudo conectar a Internet. Mostrando categorías almacenadas.');
+      } else {
+        console.log("NO hay conexión")
+        //Alert.alert('Sin conexión', 'No se pudo conectar a Internet. Mostrando categorías almacenadas.');
       }
     };
 

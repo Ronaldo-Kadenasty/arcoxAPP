@@ -1,5 +1,5 @@
 import React, { useRef, useContext, useEffect, useState } from 'react';
-import { View, TextInput, Text, FlatList, StyleSheet, TouchableOpacity, Alert, Image} from 'react-native';
+import { View, TextInput, Text, FlatList, StyleSheet, TouchableOpacity, Alert, Image } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Button, Icon, Card } from 'react-native-elements';
 import { Context as AuthContext } from '../context/AuthContext';
@@ -23,13 +23,18 @@ const AccountScreen = ({ navigation }) => {
   const [cartItems, setCartItems] = useState([]);
   const [expensesValue, setExpensesValue] = useState('');
   const [products, setProducts] = useState([]);
-  const { soldProducts, addSoldProduct, removeSoldProduct , clearSoldProducts} = useContext(ProductsContext);
+  const { soldProducts, addSoldProduct, removeSoldProduct, clearSoldProducts } = useContext(ProductsContext);
+  const [closedDayButton, setClosedDayButton] = useState(false);
+  const [localTicketRestockUrl, setLocalTicketRestockUrl] = useState('');
+  const [localTicketCutUrl, setLocalTicketCutUrl] = useState('');
+
 
   useEffect(() => {
     fetchSalesCount();
     fetchSales();
     loadProducts();
   }, []);
+
   useFocusEffect(
     React.useCallback(() => {
       fetchSalesCount();
@@ -37,8 +42,8 @@ const AccountScreen = ({ navigation }) => {
       loadProducts();
     }, [])
   );
-  const loadProducts = () => {
 
+  const loadProducts = () => {
     db.transaction((tx) => {
       tx.executeSql(
         'SELECT * FROM products',
@@ -46,8 +51,6 @@ const AccountScreen = ({ navigation }) => {
         (_, { rows: { _array } }) => setProducts(_array)
       );
     });
-
-
   };
 
   const printToImage = async (image) => {
@@ -67,52 +70,51 @@ const AccountScreen = ({ navigation }) => {
       Alert.alert('Error', 'Failed to print to image');
     }
   };
- 
 
   async function saveFile(filePath) {
     const albumName = 'Arcox';
 
     try {
-        const asset = await MediaLibrary.createAssetAsync(filePath);
+      const asset = await MediaLibrary.createAssetAsync(filePath);
 
-        if (asset) {
-            try {
-                let album = await MediaLibrary.getAlbumAsync(albumName);
-                if (album) {
-                    await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
-                } else {
-                    album = await MediaLibrary.createAlbumAsync(
-                        albumName,
-                        asset,
-                        false
-                    );
-                }
-                const assetResult = await MediaLibrary.getAssetsAsync({
-                    first: 1,
-                    album,
-                    sortBy: MediaLibrary.SortBy.creationTime,
-                });
-                const updatedAsset = await assetResult.assets[0];
-                // Do something with updatedAsset if needed
-            } catch (e) {
-                console.error('Failed', e);
-            }
-        } else {
-            console.error('Unable to use MediaLibrary, cannot create assets');
+      if (asset) {
+        try {
+          let album = await MediaLibrary.getAlbumAsync(albumName);
+          if (album) {
+            await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
+          } else {
+            album = await MediaLibrary.createAlbumAsync(
+              albumName,
+              asset,
+              false
+            );
+          }
+          const assetResult = await MediaLibrary.getAssetsAsync({
+            first: 1,
+            album,
+            sortBy: MediaLibrary.SortBy.creationTime,
+          });
+          const updatedAsset = await assetResult.assets[0];
+          // Do something with updatedAsset if needed
+        } catch (e) {
+          console.error('Failed', e);
         }
+      } else {
+        console.error('Unable to use MediaLibrary, cannot create assets');
+      }
     } catch (e) {
-        console.error('MediaLibrary.createAssetAsync failed', e);
+      console.error('MediaLibrary.createAssetAsync failed', e);
     }
-}
+  }
+
   const calculateTotal = () => {
     let total = 0;
     cartItems.forEach((item) => {
-
-
       total += JSON.parse(item.data).total;
     });
     return total.toFixed(2);
   };
+
   const handleSell = async () => {
     if (expensesValue != '') {
       const response = await processSales(state.token).then((res) => {
@@ -123,13 +125,13 @@ const AccountScreen = ({ navigation }) => {
       //console.log(udvResponse)
       //await printToImage(textRef);
       await handlePrintCorte();
-      
+
       fetchSalesCount();
       fetchSales();
       setExpensesValue('');
-      
+
       await handleRestock();
-      
+
       // await updateUdvProductsService(state.udvId, products, state.token);
       //clearCart();
 
@@ -141,25 +143,27 @@ const AccountScreen = ({ navigation }) => {
     }
 
   }
- 
+
   const handlePrintResurtido = () => {
-   
     const ticketUrl = TicketService.generateTicket('resurtido', soldProducts);
+    setLocalTicketRestockUrl(ticketUrl);
     Linking.openURL(ticketUrl)
       .catch(err => console.error("Failed to open URL:", err));
   };
 
-  const handlePrintCorte= () => {
-   
-    const ticketUrl = TicketService.generateCorteCajaTicket(state.name, cartItems,+calculateTotal(),+expensesValue,+(calculateTotal() - expensesValue));
+  const handlePrintCorte = () => {
+    const ticketUrl = TicketService.generateCorteCajaTicket(state.name, cartItems, +calculateTotal(), +expensesValue, +(calculateTotal() - expensesValue));
+    setLocalTicketCutUrl(ticketUrl);
     Linking.openURL(ticketUrl)
       .catch(err => console.error("Failed to open URL:", err));
   };
-  handleRestock= async ()=>{
+
+  const handleRestock = async () => {
     //await printToImage(restock);
     handlePrintResurtido();
     clearSoldProducts();
   }
+
   const fetchSales = async () => {
     try {
       await new Promise((resolve, reject) => {
@@ -191,7 +195,6 @@ const AccountScreen = ({ navigation }) => {
 
   const fetchSalesCount = () => {
     try {
-
       db.transaction((tx) => {
         tx.executeSql('SELECT COUNT(*) AS count FROM sales WHERE status = 0', [], (_, { rows }) => {
           const { count } = rows.item(0);
@@ -208,20 +211,25 @@ const AccountScreen = ({ navigation }) => {
     //console.log(state)
     if (salesCount >= 1) {
       alert(`Primero debe cerrar las ventas del día`);
-
     }
     else {
       signout()
     }
-
   }
 
+  const handleSetClosedDayTrue = () => {
+    console.log("Si cerro sesión")
+  };
 
+  const handleSetClosedDayFalse = () => {
+    if (localTicketRestockUrl && localTicketCutUrl) {
+      Linking.openURL(localTicketRestockUrl)
+        .catch(err => console.error("Failed to open URL:", err));
 
- 
-  
-
-  
+      Linking.openURL(localTicketCutUrl)
+        .catch(err => console.error("Failed to open URL:", err));
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -272,24 +280,17 @@ const AccountScreen = ({ navigation }) => {
           <Card.Divider />
           <Text style={styles.salesCountText}>{salesCount}</Text>
         </Card>
-       
-       
+
         <Button
-          title="Test print"
-          type="solid"
-          onPress={handlePrintCorte}
+          title="Reimprimir"
+          type="outline"
+          onPress={handleSetClosedDayFalse}
           containerStyle={styles.button}
           titleStyle={styles.buttonTitle}
-
-          buttonStyle={{ backgroundColor: '#black' }}
-
-
+          icon={<Icon name="printer" type="material-community" color="#4285F4" />}
         />
-    
 
       </View>
-     
-    
     </View>
   );
 };

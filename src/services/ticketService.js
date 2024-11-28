@@ -276,7 +276,7 @@ const TicketService = {
  generateVentaTicket(seller, route, data, totalF, cashReceived, change) {
     let header = 'rawbt:';
     let text = "             DISTRIBUIDORA ARCOX \n";
-    text += "Gerente: Manuel Morales Arcos\n";
+    text += "Gerente: Manuel Arcos\n";
     text += "RFC. MOAM870216217\n";
     text += "Numero de contacto : 231-150-8427\n";
     text += "==========================================\n"; // Separador

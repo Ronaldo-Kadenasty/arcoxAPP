@@ -94,9 +94,9 @@ const ProductListScreen = ({ route }) => {
   const renderItem = ({ item }) => (
     <View style={styles.productContainer} key={item.id}>
       <View style={styles.container}>
-        <CachedImage 
-          style={styles.productImage} 
-          source={{ uri: `http://distribuidoraarcox.com/${item.image}` }} 
+        <CachedImage
+          style={styles.productImage}
+          source={{ uri: `http://distribuidoraarcox.com/${item.image}` }}
         />
         <Text style={styles.productPrice}>$ {item.price}</Text>
       </View>
@@ -145,7 +145,7 @@ const ProductListScreen = ({ route }) => {
             <AntDesign name="closecircle" size={30} color="black" />
           </TouchableOpacity>
         </View>
-        
+
         {/* Row 2: Category reset button */}
         {route.params && route.params.category && (
           <TouchableOpacity style={styles.resetButton} onPress={handleResetCategory}>
