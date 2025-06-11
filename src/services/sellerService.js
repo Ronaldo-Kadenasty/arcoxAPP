@@ -1,5 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const db = SQLite.openDatabase('arcox.db');
 const url = `http://www.distribuidoraarcox.com/api/sale`;
@@ -146,11 +147,34 @@ const processSales = async (token) => {
 };
 
 
+const generateSaleCode = async (sellerId) => {
+  const now = new Date();
+  const datePart = `${now.getFullYear().toString().slice(-2)}${(now.getMonth() + 1)
+    .toString()
+    .padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}`; // YYMMDD
+
+  const key = `sale_counter_s${sellerId}_${datePart}`;
+  let counter = 0;
+
+  try {
+    const storedValue = await AsyncStorage.getItem(key);
+    counter = storedValue ? parseInt(storedValue, 10) : 0;
+    counter += 1;
+    await AsyncStorage.setItem(key, counter.toString());
+  } catch (error) {
+    console.error('Error accessing sale counter in AsyncStorage', error);
+  }
+
+  const counterPart = counter.toString().padStart(3, '0');
+  return `V${sellerId}-${datePart}-${counterPart}`;
+};
+
+
 const sellProductsService = async (products, sellerId, udvId, cashr, changer, token, client) => {
   
   
   const data = {
-    sale_code:100,
+    sale_code:await generateSaleCode(sellerId),
     total_before_discounts:products.reduce((acc, product) => acc + (product.price )* product.quantity, 0), //products.reduce((acc, product) => acc + product.price * product.quantity, 0),
     total: products.reduce((acc, product) => acc +( product.price- (product.discount?product.discount:0))* product.quantity, 0),
     items: products.length,
@@ -164,11 +188,12 @@ const sellProductsService = async (products, sellerId, udvId, cashr, changer, to
     client_id:null,
     seller_id: sellerId,
     udv_id: udvId,
-    products: products.map(product => ({ price: product.price-(product.discount?product.discount:0), quantity: product.quantity, product_id: product.id , discount:product.discount?product.discount:0}))
+    products: products.map(product => ({ price: product.price-(product.discount?product.discount:0), quantity: product.quantity, product_id: product.id , product_name: product.name , discount:product.discount?product.discount:0}))
   };
 
   try {
-    console.log(data);
+    //console.log(data);
+    console.log(products)
 
     // const response = await axios.post(url, data, {
     //   headers: { Authorization: `Bearer ${token}` } 
@@ -213,10 +238,13 @@ const sellProductsService = async (products, sellerId, udvId, cashr, changer, to
     });
 
     //console.log(response.data);
-   // return response.data;
+    
   } catch (error) {
     console.error(error);
   }
+  console.log('codigo de ventaaaa')
+  console.log(data.sale_code)
+  return data.sale_code;
 };
 
 

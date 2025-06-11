@@ -5,9 +5,49 @@ import { CartContext } from '../context/CartContext';
 import { AntDesign } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import CachedImage from 'react-native-expo-cached-image';
-import NetInfo from '@react-native-community/netinfo';
 
 const db = SQLite.openDatabase('arcox.db');
+
+// Memoized product item component
+const ProductItem = React.memo(({ item, onAddToCart, onRemoveFromCart, onQuantityChange, getQuantityInCart }) => {
+  return (
+    <View style={styles.productContainer}>
+      <View style={styles.container}>
+        <CachedImage
+          style={styles.productImage}
+          source={{ uri: `http://distribuidoraarcox.com/${item.image}` }}
+        />
+        <Text style={styles.productPrice}>$ {item.price}</Text>
+      </View>
+
+      <View style={styles.productDetails}>
+        <Text style={styles.productName}>{item.name}</Text>
+        <Text style={styles.productDescription}>{item.description}</Text>
+        <Text style={styles.productStock}>Bodega: {item.stock}</Text>
+        <Text style={styles.productCategory}>Categoría: {item.category_name}</Text>
+        <View style={styles.cartContainer}>
+          <TouchableOpacity style={styles.addButton} onPress={() => onAddToCart(item)}>
+            <Text style={styles.addButtonText}>+</Text>
+          </TouchableOpacity>
+          <View style={styles.totalContainer}>
+            <TextInput
+              style={styles.quantityInput}
+              keyboardType="numeric"
+              value={getQuantityInCart(item).toString()}
+              onChangeText={(value) => onQuantityChange(item, Number(value))}
+            />
+            <Text style={styles.productName}>
+              Sub: ${(item.price * getQuantityInCart(item)).toFixed(2)}
+            </Text>
+          </View>
+          <TouchableOpacity style={styles.removeButton} onPress={() => onRemoveFromCart(item)}>
+            <Text style={styles.removeButtonText}>-</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  );
+});
 
 const ProductListScreen = ({ route }) => {
   const [products, setProducts] = useState([]);
@@ -16,31 +56,21 @@ const ProductListScreen = ({ route }) => {
 
   const loadProducts = async () => {
     try {
-      if (route.params && route.params.category) {
-        db.transaction((tx) => {
-          tx.executeSql(
-            'SELECT * FROM products WHERE category_name = ? AND stock > 0',
-            [route.params.category],
-            (_, { rows: { _array } }) => setProducts(_array),
-            (_, error) => {
-              console.error('Error loading products', error);
-              Alert.alert('Error', 'No se pudieron cargar los productos.');
-            }
-          );
-        });
-      } else {
-        db.transaction((tx) => {
-          tx.executeSql(
-            'SELECT * FROM products WHERE stock > 0',
-            [],
-            (_, { rows: { _array } }) => setProducts(_array),
-            (_, error) => {
-              console.error('Error loading products', error);
-              Alert.alert('Error', 'No se pudieron cargar los productos.');
-            }
-          );
-        });
-      }
+      db.transaction((tx) => {
+        const query = route.params?.category
+          ? 'SELECT * FROM products WHERE category_name = ? AND stock > 0'
+          : 'SELECT * FROM products WHERE stock > 0';
+        const params = route.params?.category ? [route.params.category] : [];
+        tx.executeSql(
+          query,
+          params,
+          (_, { rows: { _array } }) => setProducts(_array),
+          (_, error) => {
+            console.error('Error loading products', error);
+            Alert.alert('Error', 'No se pudieron cargar los productos.');
+          }
+        );
+      });
     } catch (error) {
       console.error('Unexpected error loading products', error);
       Alert.alert('Error', 'Ocurrió un error inesperado al cargar los productos.');
@@ -92,47 +122,18 @@ const ProductListScreen = ({ route }) => {
   }, [products, searchText]);
 
   const renderItem = ({ item }) => (
-    <View style={styles.productContainer} key={item.id}>
-      <View style={styles.container}>
-        <CachedImage
-          style={styles.productImage}
-          source={{ uri: `http://distribuidoraarcox.com/${item.image}` }}
-        />
-        <Text style={styles.productPrice}>$ {item.price}</Text>
-      </View>
-
-      <View style={styles.productDetails}>
-        <Text style={styles.productName}>{item.name}</Text>
-        <Text style={styles.productDescription}>{item.description}</Text>
-        <Text style={styles.productStock}>Bodega: {item.stock}</Text>
-        <Text style={styles.productCategory}>Categoría: {item.category_name}</Text>
-        <View style={styles.cartContainer}>
-          <TouchableOpacity style={styles.addButton} onPress={() => handleAddToCart(item)}>
-            <Text style={styles.addButtonText}>+</Text>
-          </TouchableOpacity>
-          <View style={styles.totalContainer}>
-            <TextInput
-              style={styles.quantityInput}
-              keyboardType="numeric"
-              value={getQuantityInCart(item).toString()}
-              onChangeText={(value) => handleQuantityChange(item, Number(value))}
-            />
-            <Text style={styles.productName}>
-              Sub: ${(item.price * getQuantityInCart(item)).toFixed(2)}
-            </Text>
-          </View>
-          <TouchableOpacity style={styles.removeButton} onPress={() => removeFromCart(item)}>
-            <Text style={styles.removeButtonText}>-</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
+    <ProductItem
+      item={item}
+      onAddToCart={handleAddToCart}
+      onRemoveFromCart={removeFromCart}
+      onQuantityChange={handleQuantityChange}
+      getQuantityInCart={getQuantityInCart}
+    />
   );
 
   return (
     <View>
       <View style={styles.inputContainer}>
-        {/* Row 1: TextInput and "X" button */}
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <TextInput
             style={styles.searchInput}
@@ -146,8 +147,7 @@ const ProductListScreen = ({ route }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Row 2: Category reset button */}
-        {route.params && route.params.category && (
+        {route.params?.category && (
           <TouchableOpacity style={styles.resetButton} onPress={handleResetCategory}>
             <Text style={styles.resetButtonText}>
               Dejar de filtrar por: {route.params.category}
@@ -161,10 +161,14 @@ const ProductListScreen = ({ route }) => {
         data={filteredProducts}
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
+        initialNumToRender={10} // Mejora el rendimiento inicial
+        maxToRenderPerBatch={10} // Optimiza el renderizado por lotes
+        windowSize={5} // Reduce la ventana de renderizado
       />
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   productContainer: {

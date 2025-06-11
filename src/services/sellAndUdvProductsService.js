@@ -4,7 +4,9 @@ import updateUdvProductsService from './updateUdvProductsService';
 const sellAndUdvProductsService = async (products, sellerId, udvId, cashr, changer, token) => {
   try {
     const saleResponse = await sellProductsService(products, sellerId, udvId, cashr, changer, token);
-    //console.log('middddd');
+
+    console.log('en el midle');
+    console.log(saleResponse)
    // const udvResponse = await updateUdvProductsService(udvId, products, token);
     //return { saleResponse, udvResponse };
     return { saleResponse};

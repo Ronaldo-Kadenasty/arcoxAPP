@@ -21,6 +21,7 @@ const AccountScreen = ({ navigation }) => {
   const restock = useRef();
   const [capturedImage, setCapturedImage] = useState(null);
   const [cartItems, setCartItems] = useState([]);
+  const [cartItems2, setCartItems2] = useState([]);
   const [expensesValue, setExpensesValue] = useState('');
   const [products, setProducts] = useState([]);
   const { soldProducts, addSoldProduct, removeSoldProduct, clearSoldProducts } = useContext(ProductsContext);
@@ -32,6 +33,7 @@ const AccountScreen = ({ navigation }) => {
   useEffect(() => {
     fetchSalesCount();
     fetchSales();
+    fetchSalesFull();
     loadProducts();
   }, []);
 
@@ -39,6 +41,7 @@ const AccountScreen = ({ navigation }) => {
     React.useCallback(() => {
       fetchSalesCount();
       fetchSales();
+      fetchSalesFull();
       loadProducts();
     }, [])
   );
@@ -114,6 +117,16 @@ const AccountScreen = ({ navigation }) => {
     });
     return total.toFixed(2);
   };
+  const calculateTotalCanceled = () => {
+    let total = 0;
+    cartItems2.forEach((item) => {
+      //const parsed = JSON.parse(item.data);
+      if (item.status == 3) {
+        total += item.total;
+      }
+    });
+    return total.toFixed(2);
+  };
 
   const handleSell = async () => {
     if (expensesValue != '') {
@@ -128,6 +141,7 @@ const AccountScreen = ({ navigation }) => {
 
       fetchSalesCount();
       fetchSales();
+      fetchSalesFull();
       setExpensesValue('');
 
       await handleRestock();
@@ -150,7 +164,20 @@ const AccountScreen = ({ navigation }) => {
     Linking.openURL(ticketUrl)
       .catch(err => console.error("Failed to open URL:", err));
   };
+  const handlePrintReporteVentas = () => {
 
+   
+    const ticketUrl = TicketService.generateReportTicket(state.name, cartItems2, +calculateTotal(), +expensesValue, +(calculateTotal() - expensesValue),+calculateTotalCanceled());
+    setLocalTicketCutUrl(ticketUrl);
+    Linking.openURL(ticketUrl)
+      .catch(err => console.error("Failed to open URL:", err));
+  };
+  const handlePrintReporteDescuentos= () => {
+    const ticketUrl = TicketService.generateReportDiscountsTicket(state.name, cartItems2, +calculateTotal(), +expensesValue, +(calculateTotal() - expensesValue));
+    setLocalTicketCutUrl(ticketUrl);
+    Linking.openURL(ticketUrl)
+      .catch(err => console.error("Failed to open URL:", err));
+  };
   const handlePrintCorte = () => {
     const ticketUrl = TicketService.generateCorteCajaTicket(state.name, cartItems, +calculateTotal(), +expensesValue, +(calculateTotal() - expensesValue));
     setLocalTicketCutUrl(ticketUrl);
@@ -163,7 +190,45 @@ const AccountScreen = ({ navigation }) => {
     handlePrintResurtido();
     clearSoldProducts();
   }
-
+  const fetchSalesFull = async () => {
+    try {
+      await new Promise((resolve, reject) => {
+        db.transaction((tx) => {
+          tx.executeSql(
+            'SELECT * FROM sales ',//WHERE status = 0',
+            [],
+            (_, { rows }) => {
+              const parsedSales = rows._array
+                .filter(row => typeof row.data === 'string')
+                .map(row => {
+                  try {
+                    // console.log( JSON.parse(row.data))
+                    const parsed = JSON.parse(row.data);
+                    return {
+                      ...parsed,
+                      id: row.id,
+                      status: row.status
+                    };
+                  } catch (e) {
+                    console.error(`Error parsing JSON from row id ${row.id}:`, e);
+                    return null;
+                  }
+                })
+                .filter(item => item !== null);
+             // console.log(parsedSales)
+              setCartItems2(parsedSales);
+              resolve();
+            },
+            (_, error) => {
+              reject(error);
+            }
+          );
+        });
+      });
+    } catch (error) {
+      console.error('Error processing sales:', error);
+    }
+  };
   const fetchSales = async () => {
     try {
       await new Promise((resolve, reject) => {
@@ -198,7 +263,7 @@ const AccountScreen = ({ navigation }) => {
       db.transaction((tx) => {
         tx.executeSql('SELECT COUNT(*) AS count FROM sales WHERE status = 0', [], (_, { rows }) => {
           const { count } = rows.item(0);
-          console.log(count);
+         // console.log(count);
           setSalesCount(count);
         });
       });
@@ -289,6 +354,30 @@ const AccountScreen = ({ navigation }) => {
           titleStyle={styles.buttonTitle}
           icon={<Icon name="printer" type="material-community" color="#4285F4" />}
         />
+        <Button
+          title="   Precorte"
+          type="outline"
+          onPress={handlePrintResurtido}
+          containerStyle={styles.button}
+          titleStyle={styles.buttonTitle}
+          icon={<Icon name="printer" type="material-community" color="#3F8FFF" />}
+        />
+           <Button
+          title="   Reporte de Ventas"
+          type="outline"
+          onPress={handlePrintReporteVentas}
+          containerStyle={styles.button}
+          titleStyle={styles.buttonTitle}
+          icon={<Icon name="printer" type="material-community" color="#3F8FFF" />}
+        />  
+        <Button
+        title="   Reporte de Descuentos"
+        type="outline"
+        onPress={handlePrintReporteDescuentos}
+        containerStyle={styles.button}
+        titleStyle={styles.buttonTitle}
+        icon={<Icon name="printer" type="material-community" color="#3F8FFF" />}
+      />
 
       </View>
     </View>

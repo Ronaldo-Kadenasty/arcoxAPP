@@ -131,6 +131,190 @@ const TicketService = {
     
         return final;
     },
+   
+    // generateReportTicket(seller, data, subtotal, expenses, total, totalCanceled) {
+    //     const header = 'rawbt:';
+    //     const lineWidth = 40;
+    //     let text = "             DISTRIBUIDORA ARCOX \n";
+    //     text += "              Reporte de ventas\n";
+    //     text += "=".repeat(lineWidth) + "\n";
+    //     text += `Vendedor: ${seller}\n`;
+    //     text += `Fecha:  ${new Date().toLocaleString()}\n`;
+    //     text += "=".repeat(lineWidth) + "\n";
+      
+    //     // Encabezado
+    //     text += "Venta".padEnd(20, ' ') + "Total".padStart(lineWidth - 20) + "\n";
+    //     text += "-".repeat(lineWidth) + "\n";
+      
+    //     data.forEach((sale) => {
+    //       const isCancelled = sale.status === 3;
+    //       const totalTxt = `${parseFloat(sale.total).toFixed(2)}`;
+    //       const title = isCancelled
+    //         ? `Venta ${sale.sale_code} (CANCELADA)`
+    //         : `Venta ${sale.sale_code}`;
+      
+    //       text += breakTextByWord(title, lineWidth) + "\n";
+    //       text += rightAlignText(`Total: ${totalTxt}`, lineWidth) + "\n";
+      
+    //       // Listar productos con cantidad, nombre, precio y subtotal
+    //       sale.products.forEach((product) => {
+    //         const name = sanitizeText(product.product_name);
+    //         const quantity = product.quantity;
+    //         const discount = product.discount || 0;
+    //         const unitPrice = (product.price).toFixed(2);
+    //         const lineTotal = (unitPrice * quantity).toFixed(2);
+    //         const discountMark = discount > 0 ? '*' : '';
+      
+    //         // Línea: x1 Nombre Producto $Precio $Total
+    //         const fullLine = `x${quantity} ${name}`;
+    //         const wrapped = breakTextByWord(fullLine, lineWidth - 1).split('\n');
+      
+    //         const firstPart = wrapped[0].padEnd(
+    //           lineWidth - (unitPrice.length + lineTotal.length + 4 + discountMark.length),
+    //           ' '
+    //         );
+      
+    //         text += `${firstPart} ${unitPrice}${discountMark} ${lineTotal}\n`;
+      
+    //         // Si hay más líneas, se imprimen debajo
+    //         for (let i = 1; i < wrapped.length; i++) {
+    //           text += `  ${wrapped[i]}\n`;
+    //         }
+    //       });
+      
+    //       text += "-".repeat(lineWidth) + "\n";
+    //     });
+      
+    //     text += "=".repeat(lineWidth) + "\n";
+    //     text += `Total Ventas:        ${subtotal.toFixed(2)}\n`;
+    //     text += `Total Gastos:        ${expenses.toFixed(2)}\n`;
+    //     text += `Canceladas:          ${totalCanceled.toFixed(2)}\n`;
+    //     text += "-".repeat(lineWidth) + "\n";
+    //     text += `Efectivo Final:      ${total.toFixed(2)}\n`;
+    //     text += "=".repeat(lineWidth) + "\n";
+    //     text += "¡Gracias por su trabajo!\n";
+      
+    //     return header + encodeURIComponent(text);
+    //   },
+    generateReportTicket(seller, data, subtotal, expenses, total, totalCanceled) {
+        const header = 'rawbt:';
+        const lineWidth = 40;
+        let text = "             DISTRIBUIDORA ARCOX \n";
+        text += "              Reporte de ventas\n";
+        text += "=".repeat(lineWidth) + "\n";
+        text += `Vendedor: ${seller}\n`;
+        text += `Fecha:  ${new Date().toLocaleString()}\n`;
+        text += "=".repeat(lineWidth) + "\n";
+      
+        text += "Venta".padEnd(20, ' ') + "Total".padStart(lineWidth - 20) + "\n";
+        text += "-".repeat(lineWidth) + "\n";
+      
+        data.forEach((sale) => {
+          const isCancelled = sale.status === 3;
+          const totalTxt = `${parseFloat(sale.total).toFixed(2)}`;
+          const title = isCancelled
+            ? `Venta ${sale.sale_code} (CANCELADA)`
+            : `Venta ${sale.sale_code}`;
+      
+          text += breakTextByWord(title, lineWidth) + "\n";
+          text += rightAlignText(`Total: ${totalTxt}`, lineWidth) + "\n";
+      
+          sale.products.forEach((product) => {
+            const name = sanitizeText(product.product_name);
+            const discount = product.discount || 0;
+            const quantity = product.quantity;
+            const unitPrice = (product.price).toFixed(2);
+            const lineTotal = (unitPrice * quantity).toFixed(2);
+            const quantityLabel = (discount > 0 ? '*' : ' ') + quantity;
+      
+            // Línea 1: cantidad con o sin asterisco
+            text += `${quantityLabel} `;
+      
+            // Línea 2: nombre completo del producto, cortado en partes si es largo
+            const wrappedName = breakTextByWord(name, lineWidth);
+            wrappedName.split('\n').forEach(line => {
+              text += `${line}\n`;
+            });
+      
+            // Línea 3: precio unitario y total
+            const priceLine = rightAlignText(`${unitPrice} x ${lineTotal}`, lineWidth);
+            text += priceLine + "\n";
+          });
+      
+          text += "-".repeat(lineWidth) + "\n";
+        });
+      
+        text += "=".repeat(lineWidth) + "\n";
+        text += `Total Ventas:        ${subtotal.toFixed(2)}\n`;
+        text += `Total Gastos:        ${expenses.toFixed(2)}\n`;
+        text += `Canceladas:          ${totalCanceled.toFixed(2)}\n`;
+        text += "-".repeat(lineWidth) + "\n";
+        text += `Efectivo Final:      ${total.toFixed(2)}\n`;
+        text += "=".repeat(lineWidth) + "\n";
+        text += "¡Gracias por su trabajo!\n";
+      
+        return header + encodeURIComponent(text);
+      },
+    generateReportDiscountsTicket(seller, data,subtotal, expenses, total) {
+        const header = 'rawbt:';
+        const lineWidth = 40;
+        let text = "             DISTRIBUIDORA ARCOX \n";
+        text += "           Reporte de Descuentos\n";
+        text += "=".repeat(lineWidth) + "\n";
+        text += `Vendedor: ${seller}\n`;
+        text += `Fecha:  ${new Date().toLocaleString()}\n`;
+        text += "=".repeat(lineWidth) + "\n";
+      
+        const filteredSales = data.filter(sale =>
+          sale.products.some(p => (p.discount || 0) > 0)
+        );
+      
+        if (filteredSales.length === 0) {
+          text += "No se aplicaron descuentos.\n";
+        } else {
+          filteredSales.forEach((sale) => {
+            console.log(sale)
+            text += breakTextByWord(`Venta ${sale.sale_code}`, lineWidth) + "\n";
+            text += "-".repeat(lineWidth) + "\n";
+      
+            sale.products
+              .filter((p) => (p.discount || 0) > 0)
+              .forEach((product) => {
+                const originalPrice = parseFloat(product.price+product.discount).toFixed(2);
+                const discount = parseFloat(product.discount || 0).toFixed(2);
+                console.log(discount)
+                const finalPrice = (product.price ).toFixed(2);
+                const totalFinal = (finalPrice * product.quantity).toFixed(2);
+                const quantityLabel = `*${product.quantity}`;
+      
+                const name = sanitizeText(product.product_name);
+                const wrappedName = breakTextByWord(name, lineWidth);
+      
+                // Línea 1: cantidad
+                text += `${quantityLabel}\n`;
+      
+                // Línea 2+: nombre completo en varias líneas
+                wrappedName.split('\n').forEach(line => {
+                  text += `${line}\n`;
+                });
+      
+                // Línea 3: desglose de descuento
+                text += `  ${originalPrice} - ${discount} = ${finalPrice}\n`;
+      
+                // Línea 4: total
+                const totalLine = rightAlignText(`${finalPrice} x ${product.quantity} = ${totalFinal}`, lineWidth);
+                text += totalLine + "\n";
+      
+                text += "-".repeat(lineWidth) + "\n";
+              });
+          });
+        }
+      
+        text += "=".repeat(lineWidth) + "\n";
+        text += "¡Gracias por su trabajo!\n";
+      
+        return header + encodeURIComponent(text);
+    },
     
    
     // generateVentaTicket(seller, route, data, totalF, cashReceived, change) {
@@ -273,7 +457,7 @@ const TicketService = {
     
     //     return final;
     // }
- generateVentaTicket(seller, route, data, totalF, cashReceived, change) {
+ generateVentaTicket(seller, route, data, totalF, cashReceived, change,sale_code) {
     let header = 'rawbt:';
     let text = "             DISTRIBUIDORA ARCOX \n";
     text += "Gerente: Manuel Arcos\n";
@@ -282,6 +466,7 @@ const TicketService = {
     text += "==========================================\n"; // Separador
     text += `Fecha:  ${new Date().toLocaleString()}\n`;
     text += `Vendedor: ${seller}\nRuta: ${route}\n`;
+    text += `Venta: ${sale_code}\n`;
     text += "==========================================\n"; // Separador
 
     // Encabezados de las columnas

@@ -122,14 +122,15 @@ const CartScreen = () => {
     //console.log(response); // do something with the response
   };
 
-  const handlePrintVenta = () => {
-    const seller = state.name;
-    const route = `Ruta ${state.udvId}`;
+  const handlePrintVenta = async (sale_code) => {
+    const seller = await AsyncStorage.getItem('name');
+    // const route = `Ruta ${state.udvId}`;
+    const route = `Ruta ${await AsyncStorage.getItem('udvId')}`;
     let total = +calculateTotal();
     const cashReceived = +cashValue;
     const change = +(cashValue - calculateTotal());
 
-    const ticketUrl = TicketService.generateVentaTicket(seller, route, cartItems, total, cashReceived, change);
+    const ticketUrl = TicketService.generateVentaTicket(seller, route, cartItems, total, cashReceived, change,sale_code);
     setLastTIcket(ticketUrl);
     Linking.openURL(ticketUrl)
       .catch(err => console.error("Failed to open URL:", err));
@@ -143,9 +144,11 @@ const CartScreen = () => {
     try {
       setShowPrinting(true);
       setShowModal(false);
-      const response = await sellAndUdvProductsService(cartItems, state.sellerId, state.udvId, cashValue, (cashValue - calculateTotal()).toFixed(2), state.token, client.id);
+      const response = await sellAndUdvProductsService(cartItems, await AsyncStorage.getItem('sellerId') ,await AsyncStorage.getItem('udvId'), cashValue, (cashValue - calculateTotal()).toFixed(2), await AsyncStorage.getItem('token'), client.id);
       //await printToImage();
-      handlePrintVenta();
+      console.log('en el carrito')
+      console.log(response)
+      handlePrintVenta(response.saleResponse);
       cartItems.forEach((item) => {
         addSoldProduct(item, item.quantity);
       });

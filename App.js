@@ -8,6 +8,7 @@ import Signin from './src/screens/Signin';
 import CategoriesScreen from './src/screens/Categories';
 
 import Tab3 from './src/screens/Account';
+import Sales from './src/screens/Sales'
 import BarCode from './src/screens/BarCode';
 import Carrito from './src/screens/Profile';
 import Productos from './src/screens/Products';
@@ -64,7 +65,12 @@ function HomeFlow() {
                 ? 'ios-add-circle'
                 : 'ios-add-circle-outline';
               break;
-            case 'Escaner':
+            // case 'Escaner':
+            //   iconName = focused
+            //     ? 'ios-add-circle'
+            //     : 'ios-add-circle-outline';
+            //   break;
+            case 'Ventas':
               iconName = focused
                 ? 'ios-add-circle'
                 : 'ios-add-circle-outline';
@@ -85,7 +91,8 @@ function HomeFlow() {
       <Tab.Screen name="Categorías" component={CategoriesScreen} />
       <Tab.Screen name="Productos" component={Productos} />
       <Tab.Screen name="Carrito" component={Carrito} />
-      <Tab.Screen name="Escaner" component={BarCode} />
+      {/* <Tab.Screen name="Escaner" component={BarCode} /> */}
+      <Tab.Screen name="Ventas" component={Sales} />
       <Tab.Screen name="Cuenta" component={Tab3} />
     </Tab.Navigator>
   );
