@@ -12,6 +12,7 @@ import Sales from './src/screens/Sales'
 import BarCode from './src/screens/BarCode';
 import Carrito from './src/screens/Profile';
 import Productos from './src/screens/Products';
+import AdminReports from './src/screens/AdminReports';
 import { Provider as AuthProvider, Context as AuthContext } from './src/context/AuthContext.js';
 import { Provider } from 'react-redux';
 import store from './src/store';
@@ -124,11 +125,18 @@ function App() {
             component={AuthFlow}
           />
         ) : (
-          <Stack.Screen
-            options={{ headerShown: false }}
-            name="Home"
-            component={HomeFlow}
-          />
+          <>
+            <Stack.Screen
+              options={{ headerShown: false }}
+              name="Home"
+              component={HomeFlow}
+            />
+            <Stack.Screen
+              options={{ headerShown: false }}
+              name="AdminReports"
+              component={AdminReports}
+            />
+          </>
         )}
       </Stack.Navigator>
     </NavigationContainer>
