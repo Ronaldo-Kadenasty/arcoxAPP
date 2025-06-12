@@ -347,37 +347,13 @@ const AccountScreen = ({ navigation }) => {
         </Card>
 
         <Button
-          title="Reimprimir"
+          title="Administrar Reportes"
           type="outline"
-          onPress={handleSetClosedDayFalse}
+          onPress={() => navigation.navigate('AdminReports')}
           containerStyle={styles.button}
           titleStyle={styles.buttonTitle}
-          icon={<Icon name="printer" type="material-community" color="#4285F4" />}
+          icon={<Icon name="lock" type="material-community" color="#4285F4" />}
         />
-        <Button
-          title="   Precorte"
-          type="outline"
-          onPress={handlePrintResurtido}
-          containerStyle={styles.button}
-          titleStyle={styles.buttonTitle}
-          icon={<Icon name="printer" type="material-community" color="#3F8FFF" />}
-        />
-           <Button
-          title="   Reporte de Ventas"
-          type="outline"
-          onPress={handlePrintReporteVentas}
-          containerStyle={styles.button}
-          titleStyle={styles.buttonTitle}
-          icon={<Icon name="printer" type="material-community" color="#3F8FFF" />}
-        />  
-        <Button
-        title="   Reporte de Descuentos"
-        type="outline"
-        onPress={handlePrintReporteDescuentos}
-        containerStyle={styles.button}
-        titleStyle={styles.buttonTitle}
-        icon={<Icon name="printer" type="material-community" color="#3F8FFF" />}
-      />
 
       </View>
     </View>
